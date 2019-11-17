@@ -1,34 +1,49 @@
 package com.ecaporali.trafficcounter.models;
 
 import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 
 import static com.ecaporali.trafficcounter.utils.AssertUtils.checkNonNull;
-import static com.ecaporali.trafficcounter.utils.DateTimeUtils.MINUTES_IN_HALF_HOUR;
-import static com.ecaporali.trafficcounter.utils.DateTimeUtils.formatToISO;
-import static com.ecaporali.trafficcounter.utils.DateTimeUtils.formatToTime;
+import static java.util.stream.Collectors.joining;
 
-public class ContiguousLogCounter {
+public final class ContiguousLogCounter {
 
-    private final LogCounter startContiguousLogCounter;
-    private final LogCounter endContiguousLogCounter;
+    private final List<LogCounter> logCounters;
     private final int totalCarsCount;
 
-    public ContiguousLogCounter(LogCounter startContiguousLogCounter, LogCounter endContiguousLogCounter, int totalCarsCount) {
-        checkNonNull(startContiguousLogCounter, "startContiguousLogCounter cannot be null");
-        checkNonNull(endContiguousLogCounter, "endContiguousLogCounter cannot be null");
-        this.startContiguousLogCounter = startContiguousLogCounter;
-        this.endContiguousLogCounter = endContiguousLogCounter;
-        this.totalCarsCount = totalCarsCount;
+    public ContiguousLogCounter(List<LogCounter> logCounters) {
+        checkNonNull(logCounters, "ContiguousLogCounter", "logCounters cannot be null");
+        this.logCounters = logCounters;
+        this.totalCarsCount = calculateTotalCarsCount(logCounters);
     }
 
-    @Override
-    public String toString() {
-        return formatToISO(startContiguousLogCounter.getTimestamp())
-                + " | "
-                + formatToTime(endContiguousLogCounter.getTimestamp().plusMinutes(MINUTES_IN_HALF_HOUR))
-                + " "
-                + totalCarsCount;
+    private int calculateTotalCarsCount(List<LogCounter> logCounters) {
+        return logCounters.stream().mapToInt(LogCounter::getCarsCount).sum();
+    }
+
+    public int getTotalCarsCount() {
+        return totalCarsCount;
     }
 
     public static Comparator<ContiguousLogCounter> NumberOfCarsComparatorAsc = Comparator.comparingInt(o -> o.totalCarsCount);
+
+    @Override
+    public String toString() {
+        return logCounters.stream().map(LogCounter::toStringWithDateTime).collect(joining("\n"));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ContiguousLogCounter that = (ContiguousLogCounter) o;
+        return totalCarsCount == that.totalCarsCount &&
+                logCounters.equals(that.logCounters);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(logCounters, totalCarsCount);
+    }
 }

@@ -21,7 +21,7 @@ import static java.lang.String.format;
 public class LogFileReaderService {
 
     public static List<LogCounter> readLogFile(String filename) throws URISyntaxException, IOException {
-        checkNonNull(filename, "filename cannot be null");
+        checkNonNull(filename, "LogFileReaderService.readLogFile","filename cannot be null");
         URL systemResource = getSystemResource(filename);
         if (systemResource == null) throw new FileNotFoundException(format("File '%s' cannot be found", filename));
         else return Files

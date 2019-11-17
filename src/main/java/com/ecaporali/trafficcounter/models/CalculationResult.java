@@ -1,7 +1,9 @@
 package com.ecaporali.trafficcounter.models;
 
 import java.util.List;
+import java.util.Objects;
 
+import static com.ecaporali.trafficcounter.utils.AssertUtils.checkCondition;
 import static com.ecaporali.trafficcounter.utils.AssertUtils.checkNonNull;
 
 final public class CalculationResult {
@@ -9,7 +11,7 @@ final public class CalculationResult {
     private final int totalCarsCount;
     private final List<LogCounter> totalCarsPerDay;
     private final List<LogCounter> topNHalfHours;
-    private final ContiguousLogCounter contiguousNLeastHalfHours;
+    private final List<ContiguousLogCounter> contiguousNLeastHalfHours;
 
     private CalculationResult(Builder builder) {
         this.totalCarsCount = builder.totalCarsCount;
@@ -22,7 +24,7 @@ final public class CalculationResult {
         private int totalCarsCount;
         private List<LogCounter> totalCarsPerDay;
         private List<LogCounter> topNHalfHours;
-        private ContiguousLogCounter contiguousNLeastHalfHours;
+        private List<ContiguousLogCounter> contiguousNLeastHalfHours;
 
         public static Builder newInstance() {
             return new Builder();
@@ -46,15 +48,16 @@ final public class CalculationResult {
             return this;
         }
 
-        public Builder withContiguousNLeastHalfHours(ContiguousLogCounter contiguousNLeastHalfHours) {
+        public Builder withContiguousNLeastHalfHours(List<ContiguousLogCounter> contiguousNLeastHalfHours) {
             this.contiguousNLeastHalfHours = contiguousNLeastHalfHours;
             return this;
         }
 
         public CalculationResult build() {
-            checkNonNull(this.totalCarsPerDay, "totalCarsPerDay must not be null");
-            checkNonNull(this.topNHalfHours, "topNHalfHours must not be null");
-            checkNonNull(this.contiguousNLeastHalfHours, "contiguousNLeastHalfHours must not be null");
+            checkNonNull(this.totalCarsPerDay, "CalculationResult.Builder.build", "totalCarsPerDay must not be null");
+            checkNonNull(this.topNHalfHours, "CalculationResult.Builder.build", "topNHalfHours must not be null");
+            checkNonNull(this.contiguousNLeastHalfHours, "CalculationResult.Builder.build", "contiguousNLeastHalfHours must not be null");
+            checkCondition(contiguousNLeastHalfHours.size() > 1, "CalculationResult.Builder.build", "contiguousNLeastHalfHours must not contain more than one element");
             return new CalculationResult(this);
         }
     }
@@ -62,15 +65,31 @@ final public class CalculationResult {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("\n---------------------------------\n");
+        sb.append("\n----------------------\n");
         sb.append(totalCarsCount);
-        sb.append("\n---------------------------------\n");
+        sb.append("\n----------------------\n");
         totalCarsPerDay.forEach(logCounter -> sb.append(logCounter.toStringWithDate()).append("\n"));
-        sb.append("---------------------------------\n");
+        sb.append("----------------------\n");
         topNHalfHours.forEach(logCounter -> sb.append(logCounter.toStringWithDateTime()).append("\n"));
-        sb.append("---------------------------------\n");
-        sb.append(contiguousNLeastHalfHours).append("\n");
-        sb.append("---------------------------------");
+        sb.append("----------------------\n");
+        contiguousNLeastHalfHours.forEach(contiguousLogCounter -> sb.append(contiguousLogCounter).append("\n"));
+        sb.append("----------------------");
         return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CalculationResult that = (CalculationResult) o;
+        return totalCarsCount == that.totalCarsCount &&
+                totalCarsPerDay.equals(that.totalCarsPerDay) &&
+                topNHalfHours.equals(that.topNHalfHours) &&
+                contiguousNLeastHalfHours.equals(that.contiguousNLeastHalfHours);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(totalCarsCount, totalCarsPerDay, topNHalfHours, contiguousNLeastHalfHours);
     }
 }
